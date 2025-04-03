@@ -1,0 +1,57 @@
+---
+name: packages
+description: Install tools and AWS CLI for ParallelCluster deployments.
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: InstallPackages
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+
+              # Install the tools that we will need in the ParallelCluster
+              dnf search htop && dnf install -y htop
+              dnf search gdp && dnf install -y gdb
+              python3 -m pip install ClusterShell
+
+              # Install the latest AWS CLI version
+              dnf remove -y awscli
+              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
+              unzip /tmp/awscliv2.zip -d /tmp
+              /tmp/aws/install
+              echo "awscli installed"
+              echo "${PATH}"
+              echo "Installing efa"
+              cd /tmp
+              echo "In temp, about to curl"
+              curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz
+              echo "Curl done, unpacking"
+              tar xf aws-efa-installer-latest.tar.gz
+              echo "Entering installer dir"
+              cd aws-efa-installer
+              echo "Running efa installer script"
+              ./efa_installer.sh -y --skip-kmod
+              echo "Efa installer script done"
+              cd
+              rm -rf /tmp/aws*
+  - name: test
+    steps:
+      - name: TestPackages
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+              echo "Testing packages"
+              echo "${PATH}"
+              which htop && htop --version | head -n1 && \
+              which nodeset && nodeset --version && \
+              which aws && aws --version
+              echo "awscli ok"

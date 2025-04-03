@@ -1,0 +1,39 @@
+name: singularity-ce
+description: Install Singularity CE for running containers in ParallelCluster deployments.
+schemaVersion: 1.0
+parameters:
+  - SingularityVersion:
+      type: string
+      default: "4.2.0"
+      description: Version of Singularity to install
+phases:
+  - name: build
+    steps:
+     - name: InstallSingularity
+       action: ExecuteBash
+       inputs:
+        commands:
+          - |
+            #!/bin/bash
+            
+            set -euo pipefail
+            
+            # Copy the RPMs to the temporary directory
+            aws s3 cp s3://sboinfrastructureassets/rpms/singularity-ce-{{ SingularityVersion }}-1.amzn2023.x86_64.rpm /tmp
+            aws s3 cp s3://sboinfrastructureassets/rpms/singularity-ce-debuginfo-{{ SingularityVersion }}-1.amzn2023.x86_64.rpm /tmp
+
+            # Install Singularity CE and its dependencies
+            dnf install -y /tmp/singularity-ce-*.rpm
+            rm -rf /tmp/singularity-ce-*.rpm
+  - name: test
+    steps:
+      - name: TestSingularity
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              #!/bin/bash
+
+              set -euo pipefail
+              
+              which singularity && singularity --version
