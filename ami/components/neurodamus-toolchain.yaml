@@ -1,0 +1,89 @@
+---
+name: neurodamus-toolchain
+description: Install toolchain for neurodamus
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: EFA and OpenMPI
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+              dnf -y install gcc-c++ cpp cmake python3-pip python-devel python3.11-devel git ninja-build python3-virtualenv
+              cd /tmp
+              curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz
+              tar xf aws-efa-installer-latest.tar.gz
+              cd aws-efa-installer
+              ./efa_installer.sh -y --skip-kmod --mpi=openmpi5
+              cd -
+              rm -rf /tmp/aws*
+      - name: HDF5
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+              mkdir hdf5
+              cd hdf5
+              curl -O https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/downloads/hdf5-1.14.6.tar.gz
+              tar xf hdf5-1.14.6.tar.gz
+              cd hdf5-1.14.6
+              ./configure --enable-parallel --enable-shared --prefix=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install
+              make -j
+              make install
+              cd ..
+              rm -rf hdf5*
+      - name: libSONATA
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+              mkdir libsonata
+              cd libsonata
+              git clone https://github.com/openbraininstitute/libsonatareport.git --recursive
+              cd libsonatareport
+              export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              cmake -B build -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=ON -DCMAKE_INSTALL_PREFIX=/home/ec2-user/circuit_simulation/libsonata/libsonatareport/install -GNinja
+              cmake --build build
+              cmake --install build
+              cd ../../
+              rm -rf libsonata*
+      - name: neuron and neurodamus
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -euo pipefail
+              set -x
+              python3.11 -m venv neurodamus_venv
+              source neurodamus_venv/bin/activate
+              pip install --upgrade pip
+              pip install neuron
+              mkdir neurodamus
+              cd neurodamus
+              git clone https://github.com/openbraininstitute/neurodamus.git
+              cd neurodamus
+              pip install .
+              mkdir neurodamus-models
+              cd neurodamus-models
+              git clone https://github.com/openbraininstitute/neurodamus-models neurodamus-models/src
+              export CC=$(which mpicc)
+              export CXX=$(which mpicxx)
+              DATADIR=$(python -c "import neurodamus; from pathlib import Path; print(Path(neurodamus.__file__).rparent / 'data')")
+              cmake -B neurodamus-models/build -S neurodamus-models/src -DCMAKE_INSTALL_PREFIX=${PWD}/neurodamus-models/install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/reports/install -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -Dsonata_DIR=/home/ec2-user/circuit_simulation/libsonata/libsonatareport/install/share/sonata/CMake
+              cmake --build neurodamus-models/build
+              cd neurodamus-models/build/x86_64
+              for file in *.c; do ln -s "$file" "${file%.c}.cpp"; done
+              cd -
+              cmake --install neurodamus-models/build
