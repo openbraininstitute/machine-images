@@ -16,7 +16,7 @@ phases:
 
               # Install the tools that we will need in the ParallelCluster
               dnf search htop && dnf install -y htop
-              dnf search gdp && dnf install -y gdb
+              dnf search gdb && dnf install -y gdb
               python3 -m pip install ClusterShell
 
               # Install the latest AWS CLI version

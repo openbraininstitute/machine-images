@@ -5,7 +5,7 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
-      - name: EFA and OpenMPI
+      - name: EFA-and-OpenMPI
         action: ExecuteBash
         inputs:
           commands:
@@ -13,7 +13,7 @@ phases:
               #!/bin/bash
               set -euo pipefail
               set -x
-              dnf -y install gcc-c++ cpp cmake python3-pip python-devel python3.11-devel git ninja-build python3-virtualenv
+              dnf -y install bison cpp cmake gcc-c++ flex git libfl-devel python3.11-devel python3-pip python-devel python3-virtualenv readline-devel ninja-build
               cd /tmp
               curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz
               tar xf aws-efa-installer-latest.tar.gz
@@ -27,8 +27,12 @@ phases:
           commands:
             - |-
               #!/bin/bash
-              set -euo pipefail
               set -x
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              set -euo pipefail
+              export CC=$(which mpicc)
+              export CXX=$(which mpic++)
               mkdir hdf5
               cd hdf5
               curl -O https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/downloads/hdf5-1.14.6.tar.gz
@@ -39,51 +43,134 @@ phases:
               make install
               cd ..
               rm -rf hdf5*
+      - name: neurodamus_venv
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              source neurodamus_venv/bin/activate
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              python3.11 -m venv neurodamus_venv
+              pip install --upgrade pip
+              pip install --upgrade cython jinja2 numpy pkgconfig pytest pyyaml sympy wheel
       - name: libSONATA
         action: ExecuteBash
         inputs:
           commands:
             - |-
               #!/bin/bash
-              set -euo pipefail
               set -x
-              mkdir libsonata
-              cd libsonata
-              git clone https://github.com/openbraininstitute/libsonatareport.git --recursive
-              cd libsonatareport
+              source neurodamus_venv/bin/activate
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
-              cmake -B build -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=ON -DCMAKE_INSTALL_PREFIX=/home/ec2-user/circuit_simulation/libsonata/libsonatareport/install -GNinja
-              cmake --build build
-              cmake --install build
-              cd ../../
-              rm -rf libsonata*
-      - name: neuron and neurodamus
+              export CC=$(which mpicc)
+              export CXX=$(which mpic++)
+              set -euo pipefail
+              pip install git+https://github.com/openbraininstitute/libsonata@master
+              git clone https://github.com/openbraininstitute/libsonatareport.git --recursive --depth 1 -b master
+              cmake -B libsonatareport/rep_build -S libsonatareport -DCMAKE_INSTALL_PREFIX=/home/ec2-user/circuit_simulation/obi_install -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=ON
+              cmake --build libsonatareport/rep_build --parallel
+              cmake --install libsonatareport/rep_build
+              rm -rf libsonatareport
+      - name: neuron
         action: ExecuteBash
         inputs:
           commands:
             - |-
               #!/bin/bash
-              set -euo pipefail
               set -x
-              python3.11 -m venv neurodamus_venv
               source neurodamus_venv/bin/activate
-              pip install --upgrade pip
-              pip install neuron
-              mkdir neurodamus
-              cd neurodamus
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
+              export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              git clone https://github.com/neuronsimulator/nrn.git --depth 1 -b master
+              cmake -B nrn/nrn_build -S nrn -DPYTHON_EXECUTABLE=$(which python) -DCMAKE_INSTALL_PREFIX=/home/ec2-user/circuit_simulation/obi_install \
+              -DNRN_ENABLE_MPI=ON -DNRN_ENABLE_INTERVIEWS=OFF -DNRN_ENABLE_RX3D=OFF -DNRN_ENABLE_CORENEURON=ON -DCMAKE_C_COMPILER=gcc \
+              -DCMAKE_CXX_COMPILER=g++ -DCORENRN_ENABLE_REPORTING=ON -DCMAKE_PREFIX_PATH=$SONATAREP_INSTALL_DIR
+              cmake --build nrn/nrn_build -- -j
+              cmake --install nrn/nrn_build
+              rm -rf nrn
+      - name: h5py
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              source neurodamus_venv/bin/activate
+              export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              pip install mpi4py
+              export CC=$(which mpicc)
+              export CXX=$(which mpicxx)
+              export HDF5_MPI="ON"
+              export HDF5_INCLUDEDIR=/usr/include/hdf5/mpich
+              export HDF5_LIBDIR=/usr/lib/$(uname -m)-linux-gnu/hdf5/mpich
+              pip install --no-cache-dir --no-binary=h5py h5py --no-build-isolation
+      - name: neurodamus
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              source neurodamus_venv/bin/activate
+              export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
+              export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              export HOC_LIBRARY_PATH="/home/ec2-user/circuit_simulation/neurodamus/neurodamus/data/hoc"
+              export NEURODAMUS_PYTHON="/home/ec2-user/circuit_simulation/neurodamus/neurodamus/data"
+              export NEURODAMUS_MODS_DIR="/home/ec2-user/circuit_simulation/neurodamus/neurodamus/data/mod"
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/home/ec2-user/circuit_simulation/neurodamus_venv/bin:$PATH
+              export PATH=/home/ec2-user/circuit_simulation/obi_install/bin:$PATH
+              export PYTHONPATH=/home/ec2-user/circuit_simulation/obi_install/lib/python:$PYTHONPATH
+              export CC=$(which mpicc)
+              export CXX=$(which mpicxx)
+              set -euo pipefail
               git clone https://github.com/openbraininstitute/neurodamus.git
               cd neurodamus
               pip install .
-              mkdir neurodamus-models
-              cd neurodamus-models
-              git clone https://github.com/openbraininstitute/neurodamus-models neurodamus-models/src
-              export CC=$(which mpicc)
-              export CXX=$(which mpicxx)
-              DATADIR=$(python -c "import neurodamus; from pathlib import Path; print(Path(neurodamus.__file__).rparent / 'data')")
-              cmake -B neurodamus-models/build -S neurodamus-models/src -DCMAKE_INSTALL_PREFIX=${PWD}/neurodamus-models/install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/reports/install -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -Dsonata_DIR=/home/ec2-user/circuit_simulation/libsonata/libsonatareport/install/share/sonata/CMake
-              cmake --build neurodamus-models/build
-              cd neurodamus-models/build/x86_64
-              for file in *.c; do ln -s "$file" "${file%.c}.cpp"; done
               cd -
+              rm -rf neurodamus
+              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/AMPANMDAHelper.hoc -O $HOC_LIBRARY_PATH/AMPANMDAHelper.hoc
+              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/GABAABHelper.hoc -O $HOC_LIBRARY_PATH/GABAABHelper.hoc
+              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/mod/ProbAMPANMDA_EMS.mod -O $NEURODAMUS_MODS_DIR/ProbAMPANMDA_EMS.mod
+              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/mod/ProbGABAAB_EMS.mod -O $NEURODAMUS_MODS_DIR/ProbGABAAB_EMS.mod
+              git clone --branch=main https://github.com/openbraininstitute/neurodamus-models.git
+              export DATADIR=/home/ec2-user/circuit_simulation/neurodamus/neurodamus/data
+              cmake -B neurodamus-models/build -S neurodamus-models -DCMAKE_INSTALL_PREFIX=/home/ec2-user/circuit_simulation/obi_install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${SONATAREP_INSTALL_DIR} -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -DNEURODAMUS_NCX_V5=ON
+              cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
+  - name: Test
+    steps:
+      - name: TestPackages
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/home/ec2-user/circuit_simulation/obi_install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              source neurodamus_venv/bin/activate
+              special -python -c "from neuron import h; from neurodamus import import Neurodamus; h.quit()"

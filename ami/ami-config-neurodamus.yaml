@@ -1,0 +1,36 @@
+---
+Build:
+  # Request Amazon Linux 2023 and force upgrade of all of the packages
+  ParentImage: arn:aws:imagebuilder:us-east-1:aws:image/amazon-linux-2023-x86/x.x.x
+  UpdateOsPackages:
+    Enabled: true
+
+  # Customize the AMI with different components (e.g., AWS CLI, Singularity CE, ..., etc.)
+  Components:
+    - Type: arn
+      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/packages/1.0.1/1
+    - Type: arn
+      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/neurodamus-toolchain/0.0.1/1
+    - Type: arn  # See 'AdditionalIamPolicies' policy below
+      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/singularity-ce/4.2.1/1
+    - Type: arn
+      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/configure-ami/1.0.0/1
+  Iam:
+    # Allow access to the RPMs repository on S3 (e.g., for Singularity CE component)
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::130659266700:policy/ParallelCluster_S3_GetObject_RPMs
+
+  # Set the tags for the build process (e.g., EC2 instances, Image Builder Components, etc.)
+  Tags:
+    - Key: SBO_Billing
+      Value: hpc:parallelcluster
+
+  # Provide configuration to build the image
+  InstanceType: m5.large
+  SubnetId: subnet-05129d2e876a048b4
+  SecurityGroupIds: [sg-0f3d6a12867ecf403]
+Image:
+  # Set the tags specifically for the AMI
+  Tags:
+    - Key: SBO_Billing
+      Value: hpc:parallelcluster
