@@ -1,0 +1,23 @@
+---
+name: Build an AMI
+permissions:
+  id-token: write
+  contents: read
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  upload-components:
+    runs-on: ubuntu-latest
+    environment: sandbox-hpc
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Authenticate with AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_AMI_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Upload component definitions
+        run: |-
+          aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
