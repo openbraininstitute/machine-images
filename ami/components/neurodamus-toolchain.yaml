@@ -28,6 +28,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               set -euo pipefail
@@ -38,7 +39,10 @@ phases:
               curl -O https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/downloads/hdf5-1.14.6.tar.gz
               tar xf hdf5-1.14.6.tar.gz
               cd hdf5-1.14.6
+              set +e
               ./configure --enable-parallel --enable-shared --prefix=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install
+              if [ $? -ne 0 ]; then cat config.log; exit 1; fi
+              set -e
               make -j
               make install
               cd ..
@@ -50,13 +54,14 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              source neurodamus_venv/bin/activate
+              sudo su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
               export LD_LIBRARY_PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
               set -euo pipefail
               python3.11 -m venv neurodamus_venv
+              source neurodamus_venv/bin/activate
               pip install --upgrade pip
               pip install --upgrade cython jinja2 numpy pkgconfig pytest pyyaml sympy wheel
       - name: libSONATA
@@ -66,6 +71,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
@@ -87,6 +93,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
@@ -108,6 +115,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
@@ -129,6 +137,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
@@ -167,6 +176,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              sudo su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/home/ec2-user/circuit_simulation/obi_install/bin:$PATH
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
