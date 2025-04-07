@@ -23,6 +23,7 @@ jobs:
           aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
       - name: Delete outdated image and component
         run: |-
+          pip install aws-parallelcluster
           pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
           aws --profile=sandbox-hpc imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolc
       - name: Create new component and image
