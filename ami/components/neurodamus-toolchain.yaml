@@ -5,24 +5,6 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
-      - name: Debug
-        action: ExecuteBash
-        inputs:
-          commands:
-           - |-
-              #!/bin/bash
-              set -x
-              sudo su - ec2-user
-              echo "Who am I and where do I live?"
-              whoami
-              echo .$HOME.
-              echo "slash"
-              ls -lh /
-              echo "home"
-              ls -lh /home
-              echo "whatever .${HOME}. is"
-              ls -lh $(dirname ${HOME})
-              exit 1
       - name: EFA-and-OpenMPI
         action: ExecuteBash
         inputs:
