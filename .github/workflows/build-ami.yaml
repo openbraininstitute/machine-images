@@ -32,7 +32,19 @@ jobs:
           IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
           if [[ -n ${IMAGE_ARN} ]]
           then
+            STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
             pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
+            while [[ -n "${STACK}" ]]
+              do
+                sleep 2
+                STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
+                STACK_STATUS=$(echo $STACK | jq -r .StackStatus)
+                if [ "${STACK_STATUS}" == "DELETE_FAILED" ]
+                then
+                  echo "Stack in status ${STACK_STATUS}"
+                  exit 1
+                fi
+            done
           fi
           COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "0.0.1" ) | .arn')
           if [[ -n ${COMPONENT_ARN} ]]
