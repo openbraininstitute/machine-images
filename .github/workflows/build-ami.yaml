@@ -29,7 +29,7 @@ jobs:
         run: |-
           pip install aws-parallelcluster
           set -x
-          IMAGE_ARN=$(pcluster list-images --image-status AVAILABLE | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
+          IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
           if [[ -n ${IMAGE_ARN} ]]
           then
             pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
