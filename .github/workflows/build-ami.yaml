@@ -7,7 +7,7 @@ on:
   push:
   workflow_dispatch:
 jobs:
-  upload-components:
+  build-ami:
     runs-on: ubuntu-latest
     environment: sandbox-hpc
     steps:
