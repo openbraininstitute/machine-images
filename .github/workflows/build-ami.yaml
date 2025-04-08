@@ -21,12 +21,29 @@ jobs:
       - name: Upload component definitions
         run: |-
           aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
+      - name: Install jq
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -q -y jq
       - name: Delete outdated image and component
         run: |-
           pip install aws-parallelcluster
-          pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
-          aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
-          aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
+          set -x
+          IMAGE_ARN=$(pcluster list-images --image-status AVAILABLE | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
+          if [[ -n ${IMAGE_ARN} ]]
+          then
+            pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
+          fi
+          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "0.0.1" ) | .arn')
+          if [[ -n ${COMPONENT_ARN} ]]
+          then
+            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
+          fi
+          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "packages") | select(.version == "1.0.8" ) | .arn')
+          if [[ -n ${COMPONENT_ARN} ]]
+          then
+            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
+          fi
       - name: Create new component and image
         run: |-
           aws imagebuilder create-component --name "packages" --semantic-version "1.0.8" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
