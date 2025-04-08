@@ -36,10 +36,10 @@ jobs:
             pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
             while [[ -n "${STACK}" ]]
               do
-                sleep 2
+                sleep 10
                 STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
                 STACK_STATUS=$(echo $STACK | jq -r .StackStatus)
-                if [ "${STACK_STATUS}" == "DELETE_FAILED" ]
+                if [[ -n ${STACK_STATUS} && "${STACK_STATUS}" != "DELETE_IN_PROGRESS" ]]
                 then
                   echo "Stack in status ${STACK_STATUS}"
                   exit 1
