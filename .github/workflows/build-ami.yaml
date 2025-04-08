@@ -25,10 +25,10 @@ jobs:
         run: |-
           pip install aws-parallelcluster
           pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
-          aws --profile=sandbox-hpc imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
-          aws --profile=sandbox-hpc imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
+          aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
+          aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
       - name: Create new component and image
         run: |-
-          aws --profile=sandbox-hpc imagebuilder create-component --name "packages" --semantic-version "1.0.8" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
-          aws --profile=sandbox-hpc imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "0.0.1" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
+          aws imagebuilder create-component --name "packages" --semantic-version "1.0.8" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
+          aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "0.0.1" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id obi-parallelcluster-neurodamus-ami-al2023-v1
