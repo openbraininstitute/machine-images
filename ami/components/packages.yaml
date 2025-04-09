@@ -32,6 +32,7 @@ phases:
               set -x
               echo "change user"
               echo "Who am I and where do I live?"
+              sudo -u ec2-user export HOME=/home/ec2-user
               sudo -u ec2-user whoami
               sudo -u ec2-user echo .$HOME.
               sudo -u ec2-user echo "slash"

@@ -3,7 +3,7 @@ Build:
   # Request Amazon Linux 2023 and force upgrade of all of the packages
   ParentImage: arn:aws:imagebuilder:us-east-1:aws:image/amazon-linux-2023-x86/x.x.x
   UpdateOsPackages:
-    Enabled: true
+    Enabled: false
 
   # Customize the AMI with different components (e.g., AWS CLI, Singularity CE, ..., etc.)
   Components:
