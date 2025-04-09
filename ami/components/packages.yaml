@@ -10,8 +10,10 @@ phases:
         inputs:
           commands:
             - |-
+              cat << EOF > script.sh
               #!/bin/bash
               set -x
+              export HOME=/home/ec2-user
               echo "Passwd"
               cat /etc/passwd
               echo "change user"
@@ -23,6 +25,10 @@ phases:
               ls -lh /
               echo "home"
               ls -lh /home
+              echo "whatever .${HOME}. is"
+              ls $(dirname ${HOME})
+              EOF
+              sudo -u ec2-user bash ./script.sh
       - name: Debug_again
         action: ExecuteBash
         inputs:
