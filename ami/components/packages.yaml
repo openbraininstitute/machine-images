@@ -9,13 +9,13 @@ phases:
         action: ExecuteBash
         inputs:
           commands:
-           - |-
+            - |-
               #!/bin/bash
               set -x
               echo "Passwd"
               cat /etc/passwd
               echo "change user"
-              sudo su - ec2-user
+              su - ec2-user
               echo "Who am I and where do I live?"
               whoami
               echo .$HOME.

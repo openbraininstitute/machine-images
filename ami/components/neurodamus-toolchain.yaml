@@ -28,7 +28,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               set -euo pipefail
@@ -54,7 +54,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
@@ -71,7 +71,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
@@ -93,7 +93,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
@@ -115,7 +115,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
@@ -137,7 +137,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/home/ec2-user/circuit_simulation/obi_install
               export PATH=/home/ec2-user/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
@@ -176,7 +176,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
-              sudo su - ec2-user
+              su - ec2-user
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/home/ec2-user/circuit_simulation/obi_install/bin:$PATH
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
