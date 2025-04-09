@@ -10,6 +10,7 @@ phases:
         inputs:
           commands:
             - |-
+              set -x
               cat << EOF > script.sh
               #!/bin/bash
               set -x
