@@ -5,49 +5,6 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
-      - name: Debug
-        action: ExecuteBash
-        inputs:
-          commands:
-            - |-
-              #!/bin/bash
-              set -x
-              sudo -u ec2-user /bin/bash
-              set -x
-              export HOME=/home/ec2-user
-              echo "Passwd"
-              cat /etc/passwd
-              echo "change user"
-              su - ec2-user
-              echo "Who am I and where do I live?"
-              whoami
-              echo .$HOME.
-              echo "slash"
-              ls -lh /
-              echo "home"
-              ls -lh /home
-              echo "whatever .${HOME}. is"
-              ls $(dirname ${HOME})
-              sudo -u ec2-user bash ./script.sh
-      - name: Debug_again
-        action: ExecuteBash
-        inputs:
-          commands:
-            - |-
-              #!/bin/bash
-              set -x
-              echo "change user"
-              echo "Who am I and where do I live?"
-              sudo -u ec2-user export HOME=/home/ec2-user
-              sudo -u ec2-user whoami
-              sudo -u ec2-user echo .$HOME.
-              sudo -u ec2-user echo "slash"
-              sudo -u ec2-user ls -lh /
-              sudo -u ec2-user echo "home"
-              sudo -u ec2-user ls -lh /home
-              sudo -u ec2-user echo "whatever .${HOME}. is"
-              sudo -u ec2-user ls $(dirname ${HOME})
-              exit 1
       - name: InstallPackages
         action: ExecuteBash
         inputs:
