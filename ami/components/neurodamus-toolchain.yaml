@@ -68,6 +68,7 @@ phases:
               python3.11 -m venv neurodamus_venv
               source neurodamus_venv/bin/activate
               pip install --upgrade pip
+              pip install --upgrade setuptools
               pip install --upgrade cython jinja2 numpy pkgconfig pytest pyyaml sympy wheel
               echo "End openbraininstitute step: neurodamus_venv"
       - name: libSONATA
