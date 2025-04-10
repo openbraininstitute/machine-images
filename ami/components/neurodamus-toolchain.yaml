@@ -13,6 +13,7 @@ phases:
               #!/bin/bash
               set -euo pipefail
               set -x
+              echo "Start openbraininstitute step: EFA-and-OpenMPI"
               dnf -y install bison cpp cmake gcc-c++ flex git libfl-devel python3.11-devel python3-pip python-devel python3-virtualenv readline-devel ninja-build
               cd /tmp
               curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz
@@ -21,6 +22,7 @@ phases:
               ./efa_installer.sh -y --skip-kmod --mpi=openmpi5
               cd -
               rm -rf /tmp/aws*
+              echo "End openbraininstitute step: EFA-and-OpenMPI"
       - name: HDF5
         action: ExecuteBash
         inputs:
@@ -28,6 +30,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: HDF5"
               export HOME=/root
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
@@ -47,6 +50,7 @@ phases:
               make install
               cd ..
               rm -rf hdf5*
+              echo "End openbraininstitute step: HDF5"
       - name: neurodamus_venv
         action: ExecuteBash
         inputs:
@@ -54,6 +58,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: neurodamus_venv"
               export HOME=/root
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
@@ -64,6 +69,7 @@ phases:
               source neurodamus_venv/bin/activate
               pip install --upgrade pip
               pip install --upgrade cython jinja2 numpy pkgconfig pytest pyyaml sympy wheel
+              echo "End openbraininstitute step: neurodamus_venv"
       - name: libSONATA
         action: ExecuteBash
         inputs:
@@ -71,6 +77,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: libSONATA"
               export HOME=/root
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
@@ -86,6 +93,7 @@ phases:
               cmake --build libsonatareport/rep_build --parallel
               cmake --install libsonatareport/rep_build
               rm -rf libsonatareport
+              echo "End openbraininstitute step: libSONATA"
       - name: neuron
         action: ExecuteBash
         inputs:
@@ -93,6 +101,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: neuron"
               export HOME=/root
               source neurodamus_venv/bin/activate
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
@@ -108,6 +117,7 @@ phases:
               cmake --build nrn/nrn_build -- -j
               cmake --install nrn/nrn_build
               rm -rf nrn
+              echo "End openbraininstitute step: neuron"
       - name: h5py
         action: ExecuteBash
         inputs:
@@ -115,6 +125,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: h5py"
               export HOME=/root
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/opt/circuit_simulation/obi_install
@@ -130,6 +141,7 @@ phases:
               export HDF5_INCLUDEDIR=/usr/include/hdf5/mpich
               export HDF5_LIBDIR=/usr/lib/$(uname -m)-linux-gnu/hdf5/mpich
               pip install --no-cache-dir --no-binary=h5py h5py --no-build-isolation
+              echo "End openbraininstitute step: h5py"
       - name: neurodamus
         action: ExecuteBash
         inputs:
@@ -137,6 +149,7 @@ phases:
             - |-
               #!/bin/bash
               set -x
+              echo "Start openbraininstitute step: neurodamus"
               export HOME=/root
               source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/opt/circuit_simulation/obi_install
@@ -167,6 +180,7 @@ phases:
               cmake -B neurodamus-models/build -S neurodamus-models -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${SONATAREP_INSTALL_DIR} -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -DNEURODAMUS_NCX_V5=ON
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
+              echo "End openbraininstitute step: neurodamus"
   - name: Test
     steps:
       - name: TestPackages
