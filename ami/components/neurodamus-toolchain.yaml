@@ -114,8 +114,8 @@ phases:
               cmake -B nrn/nrn_build -S nrn -G Ninja -DPYTHON_EXECUTABLE=$(which python) -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install \
               -DNRN_ENABLE_MPI=ON -DNRN_ENABLE_INTERVIEWS=OFF -DNRN_ENABLE_RX3D=OFF -DNRN_ENABLE_CORENEURON=ON -DCMAKE_C_COMPILER=gcc \
               -DCMAKE_CXX_COMPILER=g++ -DCORENRN_ENABLE_REPORTING=ON -DCMAKE_PREFIX_PATH=$SONATAREP_INSTALL_DIR
-              cmake --build nrn/nrn_build -- -j
-              cmake --install nrn/nrn_build
+              cmake --build nrn/nrn_build --parallel
+              cmake --build nrn/nrn_build --target install
               rm -rf nrn
               echo "End openbraininstitute step: neuron"
       - name: h5py
