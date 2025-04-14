@@ -23,3 +23,31 @@ phases:
               cd -
               rm -rf /tmp/aws*
               echo "End openbraininstitute step: EFA-and-OpenMPI"
+      - name: HDF5
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: HDF5"
+              export HOME=/root
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              set -euo pipefail
+              export CC=$(which mpicc)
+              export CXX=$(which mpic++)
+              mkdir hdf5
+              cd hdf5
+              curl -O https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/downloads/hdf5-1.14.6.tar.gz
+              tar xf hdf5-1.14.6.tar.gz
+              cd hdf5-1.14.6
+              set +e
+              ./configure --enable-parallel --enable-shared --prefix=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install
+              if [ $? -ne 0 ]; then cat config.log; exit 1; fi
+              set -e
+              make -j
+              make install
+              cd ..
+              rm -rf hdf5*
+              echo "End openbraininstitute step: HDF5"
