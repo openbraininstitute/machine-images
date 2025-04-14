@@ -27,7 +27,7 @@ Build:
       Value: hpc:parallelcluster
 
   # Provide configuration to build the image
-  InstanceType: m5.large
+  InstanceType: c5.2xlarge
   SubnetId: subnet-05129d2e876a048b4
   SecurityGroupIds: [sg-0f3d6a12867ecf403]
 Image:
