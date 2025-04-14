@@ -51,3 +51,23 @@ phases:
               cd ..
               rm -rf hdf5*
               echo "End openbraininstitute step: HDF5"
+      - name: neurodamus_venv
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: neurodamus_venv"
+              export HOME=/root
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              python3.11 -m venv neurodamus_venv
+              source neurodamus_venv/bin/activate
+              pip install --upgrade pip
+              pip install --upgrade setuptools
+              pip install --upgrade cython jinja2 numpy pkgconfig pytest pyyaml sympy wheel
+              echo "End openbraininstitute step: neurodamus_venv"
