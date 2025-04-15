@@ -188,3 +188,20 @@ phases:
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
               echo "End openbraininstitute step: neurodamus"
+  - name: Test
+    steps:
+      - name: TestPackages
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              export HOME=/root
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/opt/circuit_simulation/obi_install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              source neurodamus_venv/bin/activate
+              special -python -c "from neuron import h; from neurodamus import import Neurodamus; h.quit()"
