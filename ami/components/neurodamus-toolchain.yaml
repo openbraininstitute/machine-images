@@ -122,3 +122,27 @@ phases:
               cmake --build nrn/nrn_build --target install
               rm -rf nrn
               echo "End openbraininstitute step: neuron"
+      - name: h5py
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: h5py"
+              export HOME=/root
+              source neurodamus_venv/bin/activate
+              export SONATAREP_INSTALL_DIR=/opt/circuit_simulation/obi_install
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              set -euo pipefail
+              pip install mpi4py
+              export CC=$(which mpicc)
+              export CXX=$(which mpicxx)
+              export HDF5_MPI="ON"
+              export HDF5_INCLUDEDIR=/usr/include/hdf5/mpich
+              export HDF5_LIBDIR=/usr/lib/$(uname -m)-linux-gnu/hdf5/mpich
+              pip install --no-cache-dir --no-binary=h5py h5py --no-build-isolation
+              echo "End openbraininstitute step: h5py"
