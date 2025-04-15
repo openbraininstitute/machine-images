@@ -161,7 +161,6 @@ phases:
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
               export HOC_LIBRARY_PATH="/opt/circuit_simulation/neurodamus/neurodamus/data/hoc"
-              export NEURODAMUS_PYTHON="/opt/circuit_simulation/neurodamus/neurodamus/data"
               export NEURODAMUS_MODS_DIR="/opt/circuit_simulation/neurodamus/neurodamus/data/mod"
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/opt/circuit_simulation/neurodamus_venv/bin:$PATH
@@ -170,11 +169,13 @@ phases:
               export CC=$(which mpicc)
               export CXX=$(which mpicxx)
               set -euo pipefail
+              mkdir -p ${HOC_LIBRARY_PATH}
               git clone https://github.com/openbraininstitute/neurodamus.git
               cd neurodamus
               pip install .
               cd -
               rm -rf neurodamus
+              export NEURODAMUS_PYTHON="/opt/circuit_simulation/neurodamus/neurodamus/data"
               wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/AMPANMDAHelper.hoc -O $HOC_LIBRARY_PATH/AMPANMDAHelper.hoc
               wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/GABAABHelper.hoc -O $HOC_LIBRARY_PATH/GABAABHelper.hoc
               wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/mod/ProbAMPANMDA_EMS.mod -O $NEURODAMUS_MODS_DIR/ProbAMPANMDA_EMS.mod
