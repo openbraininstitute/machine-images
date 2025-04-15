@@ -169,12 +169,12 @@ phases:
               export CC=$(which mpicc)
               export CXX=$(which mpicxx)
               set -euo pipefail
-              mkdir -p ${HOC_LIBRARY_PATH}
+              pwd
               git clone https://github.com/openbraininstitute/neurodamus.git
               cd neurodamus
               pip install .
               cd -
-              rm -rf neurodamus
+              mkdir -p ${HOC_LIBRARY_PATH}
               export NEURODAMUS_PYTHON="/opt/circuit_simulation/neurodamus/neurodamus/data"
               wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/AMPANMDAHelper.hoc -O $HOC_LIBRARY_PATH/AMPANMDAHelper.hoc
               wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/GABAABHelper.hoc -O $HOC_LIBRARY_PATH/GABAABHelper.hoc
