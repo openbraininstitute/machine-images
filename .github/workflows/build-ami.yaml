@@ -61,6 +61,11 @@ jobs:
                 fi
             done
           fi
+          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "configure-ami") | select(.version == "${{ steps.versions.outputs.CONFIGURE_AMI }}" ) | .arn')
+          if [[ -n ${COMPONENT_ARN} ]]
+          then
+            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/configure-ami/${{ steps.versions.outputs.CONFIGURE_AMI }}/1
+          fi
           COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}" ) | .arn')
           if [[ -n ${COMPONENT_ARN} ]]
           then
@@ -71,8 +76,15 @@ jobs:
           then
             aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/${{ steps.versions.outputs.PACKAGES }}/1
           fi
+          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "singularity-ce") | select(.version == "${{ steps.versions.outputs.SINGULARITY_CE }}" ) | .arn')
+          if [[ -n ${COMPONENT_ARN} ]]
+          then
+            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/singularity-ce/${{ steps.versions.outputs.SINGULARITY_CE }}/1
+          fi
       - name: Create new component and image
         run: |-
-          aws imagebuilder create-component --name "packages" --semantic-version "${{ steps.versions.outputs.PACKAGES }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
+          aws imagebuilder create-component --name "configure-ami" --semantic-version "${{ steps.versions.outputs.CONFIGURE_AMI }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/configure-ami.yaml"
           aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
+          aws imagebuilder create-component --name "packages" --semantic-version "${{ steps.versions.outputs.PACKAGES }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
+          aws imagebuilder create-component --name "singularity-ce" --semantic-version "${{ steps.versions.outputs.SINGULARITY_CE }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/singularity-ce.yaml"
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${{ steps.versions.outputs.AMI }}
