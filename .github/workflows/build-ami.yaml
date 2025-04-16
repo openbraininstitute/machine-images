@@ -25,39 +25,54 @@ jobs:
         run: |-
           sudo apt-get update
           sudo apt-get install -q -y jq
-      - name: Delete outdated image and component
+      - name: Read names and versions
+        id: versions
         run: |-
-          pip install aws-parallelcluster
-          set -x
-          IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
-          if [[ -n ${IMAGE_ARN} ]]
-          then
-            STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
-            pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
-            while [[ -n "${STACK}" ]]
-              do
-                sleep 10
-                STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
-                STACK_STATUS=$(echo $STACK | jq -r .StackStatus)
-                if [[ -n ${STACK_STATUS} && "${STACK_STATUS}" != "DELETE_IN_PROGRESS" ]]
-                then
-                  echo "Stack in status ${STACK_STATUS}"
-                  exit 1
-                fi
-            done
-          fi
-          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "0.0.1" ) | .arn')
-          if [[ -n ${COMPONENT_ARN} ]]
-          then
-            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
-          fi
-          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "packages") | select(.version == "1.0.8" ) | .arn')
-          if [[ -n ${COMPONENT_ARN} ]]
-          then
-            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
-          fi
-      - name: Create new component and image
+          echo "AMI=$(jq -r '.ami' versions.json)" >> $GITHUB_OUTPUT
+          echo "CONFIGURE_AMI=$(jq -r '.components."configure-ami"' versions.json)" >> $GITHUB_OUTPUT
+          echo "NEURODAMUS_TOOLCHAIN=$(jq -r '.components."neurodamus-toolchain"' versions.json)" >> $GITHUB_OUTPUT
+          echo "PACKAGES=$(jq -r '.components.packages' versions.json)" >> $GITHUB_OUTPUT
+          echo "SINGULARITY_CE=$(jq -r '.components."singularity-ce"' versions.json)" >> $GITHUB_OUTPUT
+      - name: test
         run: |-
-          aws imagebuilder create-component --name "packages" --semantic-version "1.0.8" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
-          aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "0.0.1" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
-          pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id obi-parallelcluster-neurodamus-ami-al2023-v1
+          echo "Would build AMI ${{ steps.versions.outputs.AMI }}"
+          echo "Would build component CONFIGURE_AMI ${{ steps.versions.outputs.CONFIGURE_AMI }}"
+          echo "Would build component NEURODAMUS_TOOLCHAIN ${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}"
+          echo "Would build component PACKAGES ${{ steps.versions.outputs.PACKAGES }}"
+          echo "Would build component SINGULARITY_CE ${{ steps.versions.outputs.SINGULARITY_CE }}"
+      # - name: Delete outdated image and component
+      #   run: |-
+      #     pip install aws-parallelcluster
+      #     set -x
+      #     IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "obi-parallelcluster-neurodamus-ami-al2023-v1") | .imageId')
+      #     if [[ -n ${IMAGE_ARN} ]]
+      #     then
+      #       STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
+      #       pcluster delete-image -i obi-parallelcluster-neurodamus-ami-al2023-v1
+      #       while [[ -n "${STACK}" ]]
+      #         do
+      #           sleep 10
+      #           STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "obi-parallelcluster-neurodamus-ami-al2023-v1")')
+      #           STACK_STATUS=$(echo $STACK | jq -r .StackStatus)
+      #           if [[ -n ${STACK_STATUS} && "${STACK_STATUS}" != "DELETE_IN_PROGRESS" ]]
+      #           then
+      #             echo "Stack in status ${STACK_STATUS}"
+      #             exit 1
+      #           fi
+      #       done
+      #     fi
+      #     COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "0.0.1" ) | .arn')
+      #     if [[ -n ${COMPONENT_ARN} ]]
+      #     then
+      #       aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/0.0.1/1
+      #     fi
+      #     COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "packages") | select(.version == "1.0.8" ) | .arn')
+      #     if [[ -n ${COMPONENT_ARN} ]]
+      #     then
+      #       aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/1.0.8/1
+      #     fi
+      # - name: Create new component and image
+      #   run: |-
+      #     aws imagebuilder create-component --name "packages" --semantic-version "1.0.8" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
+      #     aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "0.0.1" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
+      #     pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id obi-parallelcluster-neurodamus-ami-al2023-v1
