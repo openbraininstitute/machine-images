@@ -26,18 +26,6 @@ phases:
               /tmp/aws/install
               echo "awscli installed"
               echo "${PATH}"
-              echo "Installing efa"
-              cd /tmp
-              echo "In temp, about to curl"
-              curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz
-              echo "Curl done, unpacking"
-              tar xf aws-efa-installer-latest.tar.gz
-              echo "Entering installer dir"
-              cd aws-efa-installer
-              echo "Running efa installer script"
-              ./efa_installer.sh -y --skip-kmod
-              echo "Efa installer script done"
-              cd
               rm -rf /tmp/aws*
   - name: test
     steps:

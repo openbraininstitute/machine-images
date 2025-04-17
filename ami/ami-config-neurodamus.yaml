@@ -8,7 +8,8 @@ Build:
   # Customize the AMI with different components (e.g., AWS CLI, Singularity CE, ..., etc.)
   Components:
     - Type: arn
-      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/packages/1.0.1/1
+      # Value: arn:aws:imagebuilder:us-east-1:130659266700:component/packages/1.0.1/1
+      Value: arn:aws:imagebuilder:us-east-1:130659266700:component/packages/1.0.8/1
     - Type: arn
       Value: arn:aws:imagebuilder:us-east-1:130659266700:component/neurodamus-toolchain/0.0.1/1
     - Type: arn  # See 'AdditionalIamPolicies' policy below
@@ -26,7 +27,7 @@ Build:
       Value: hpc:parallelcluster
 
   # Provide configuration to build the image
-  InstanceType: m5.large
+  InstanceType: c5.4xlarge
   SubnetId: subnet-05129d2e876a048b4
   SecurityGroupIds: [sg-0f3d6a12867ecf403]
 Image:
