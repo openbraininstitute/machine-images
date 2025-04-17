@@ -45,6 +45,10 @@ jobs:
           pip install aws-parallelcluster
           set -x
           IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "${{ steps.versions.outputs.AMI }}") | .imageId')
+          if [[ -z ${IMAGE_ARN} ]]
+          then
+            IMAGE_ARN=$(pcluster list-images --image-status AVAILABLE | jq -r '.images[] | select( .imageId == "${{ steps.versions.outputs.AMI }}") | .imageId')
+          fi
           if [[ -n ${IMAGE_ARN} ]]
           then
             STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "${{ steps.versions.outputs.AMI }}")')
