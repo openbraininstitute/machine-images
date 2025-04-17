@@ -4,6 +4,6 @@
         "configure-ami": "1.0.1",
         "neurodamus-toolchain": "0.0.2",
         "packages": "1.0.9",
-        "singularity-ce": "4.2.1.0"
+        "singularity-ce": "4.2.2"
     }
 }
