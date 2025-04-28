@@ -165,8 +165,6 @@ phases:
               export PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
               export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
-              export HOC_LIBRARY_PATH="/opt/circuit_simulation/neurodamus/neurodamus/data/hoc"
-              export NEURODAMUS_MODS_DIR="/opt/circuit_simulation/neurodamus/neurodamus/data/mod"
               export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export PATH=/opt/circuit_simulation/neurodamus_venv/bin:$PATH
               export PATH=/opt/circuit_simulation/obi_install/bin:$PATH
@@ -180,15 +178,8 @@ phases:
               cd neurodamus
               pip install .
               cd -
-              mkdir -p ${HOC_LIBRARY_PATH}
-              mkdir -p ${NEURODAMUS_MODS_DIR}
-              export NEURODAMUS_PYTHON="/opt/circuit_simulation/neurodamus/neurodamus/data"
-              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/AMPANMDAHelper.hoc -O $HOC_LIBRARY_PATH/AMPANMDAHelper.hoc
-              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/hoc/GABAABHelper.hoc -O $HOC_LIBRARY_PATH/GABAABHelper.hoc
-              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/mod/ProbAMPANMDA_EMS.mod -O $NEURODAMUS_MODS_DIR/ProbAMPANMDA_EMS.mod
-              wget -q https://raw.githubusercontent.com/openbraininstitute/neurodamus-models/refs/heads/main/common/mod/ProbGABAAB_EMS.mod -O $NEURODAMUS_MODS_DIR/ProbGABAAB_EMS.mod
               git clone --branch=main https://github.com/openbraininstitute/neurodamus-models.git
-              export DATADIR=/opt/circuit_simulation/neurodamus/neurodamus/data
+              export DATADIR=$(python -c "import neurodamus; from pathlib import Path; print(Path(neurodamus.__file__).parent / 'data')")
               cmake -B neurodamus-models/build -S neurodamus-models -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${SONATAREP_INSTALL_DIR} -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -DNEURODAMUS_NCX_V5=ON
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
