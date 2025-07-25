@@ -197,7 +197,7 @@ phases:
               source neurodamus_venv/bin/activate
               set -euo pipefail
               git clone https://gitlab.com/hpctoolkit/hpctoolkit.git --recursive --depth 1
-              dnf -y install ccache libboost-all-dev
+              dnf -y install ccache boost-devel
               pip install meson
               cd hpctoolkit
               meson setup builddir
