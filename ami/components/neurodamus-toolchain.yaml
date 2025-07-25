@@ -184,6 +184,28 @@ phases:
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
               echo "End openbraininstitute step: neurodamus"
+      - name: hpctoolkit
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: hpctoolkit for CPU profiling"
+              export HOME=/root
+              cd /opt/circuit_simulation
+              source neurodamus_venv/bin/activate
+              set -euo pipefail
+              git clone https://gitlab.com/hpctoolkit/hpctoolkit.git --recursive --depth 1
+              dnf -y install ccache libboost-all-dev
+              pip install meson
+              cd hpctoolkit
+              meson setup builddir
+              cd builddir
+              meson compile
+              meson test
+              meson devenv hpcrun --version
+
   - name: Test
     steps:
       - name: TestNeurodamus
