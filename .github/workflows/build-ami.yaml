@@ -4,12 +4,18 @@ permissions:
   id-token: write
   contents: read
 on:
-  push:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Which environment to push the image to
+        type: choice
+        options: [sandbox-hpc, sandbox-benchmarks]
+        required: true
+        default: sandbox-hpc
 jobs:
   build-ami:
     runs-on: ubuntu-latest
-    environment: sandbox-hpc
+    environment: ${{ inputs.environment || 'sandbox-hpc' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,6 +24,12 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_AMI_DEPLOYMENT_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+      - name: Fill in variables in ami definition
+        run: |-
+          sed -i "s/AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/" ami/ami-config-neurodamus.yaml
+          sed -i "s/AWS_SUBNET_ID/${{ secrets.AWS_SUBNET_ID }}/" ami/ami-config-neurodamus.yaml
+          sed -i "s/AWS_SG_ID/${{ secrets.AWS_SG_ID }}/" ami/ami-config-neurodamus.yaml
+          cat ami/ami-config-neurodamus.yaml
       - name: Upload component definitions
         run: |-
           aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
@@ -87,8 +99,12 @@ jobs:
           # fi
       - name: Create new component and image
         run: |-
+          echo "Build configure AMI component"
           aws imagebuilder create-component --name "configure-ami" --semantic-version "${{ steps.versions.outputs.CONFIGURE_AMI }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/configure-ami.yaml"
+          echo "Build neurodamus-toolchain component"
           aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
+          echo "Build packages component"
           aws imagebuilder create-component --name "packages" --semantic-version "${{ steps.versions.outputs.PACKAGES }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
           # aws imagebuilder create-component --name "singularity-ce" --semantic-version "${{ steps.versions.outputs.SINGULARITY_CE }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/singularity-ce.yaml"
+          echo "Build AMI"
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${{ steps.versions.outputs.AMI }}
