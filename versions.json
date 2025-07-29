@@ -1,8 +1,8 @@
 {
-    "ami": "obi-parallelcluster-neurodamus-ami-al2023-v2",
+    "ami": "obi-parallelcluster-neurodamus-ami-al2023-v3-debug",
     "components": {
         "configure-ami": "1.0.1",
-        "neurodamus-toolchain": "0.0.2",
+        "neurodamus-toolchain": "0.0.3",
         "packages": "1.0.9",
         "singularity-ce": "4.2.2"
     }
