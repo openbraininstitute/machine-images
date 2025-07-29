@@ -4,12 +4,18 @@ permissions:
   id-token: write
   contents: read
 on:
-  push:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Which environment to push the image to
+        type: choice
+        options: [sandbox-hpc, sandbox-benchmarks]
+        required: true
+        default: sandbox-hpc
 jobs:
   build-ami:
     runs-on: ubuntu-latest
-    environment: sandbox-benchmarks
+    environment: ${{ inputs.environment || 'sandbox-hpc' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
