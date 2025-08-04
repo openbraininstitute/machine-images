@@ -205,7 +205,21 @@ phases:
               meson compile
               meson test
               meson devenv hpcrun --version
-
+              echo "End openbraininstitute step: hpctoolkit for CPU profiling"
+      - name: memray
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: memray for memray profiling"
+              export HOME=/root
+              cd /opt/circuit_simulation
+              source neurodamus_venv/bin/activate
+              set -euo pipefail
+              pip install memray
+              echo "End openbraininstitute step: memray for memray profiling"
   - name: Test
     steps:
       - name: TestNeurodamus
