@@ -1,5 +1,5 @@
 {
-    "ami": "obi-parallelcluster-neurodamus-ami-al2023-v3-debug",
+    "ami": "obi-parallelcluster-neurodamus-ami-al2023-v4-debug",
     "components": {
         "configure-ami": "1.0.1",
         "neurodamus-toolchain": "0.0.3",
