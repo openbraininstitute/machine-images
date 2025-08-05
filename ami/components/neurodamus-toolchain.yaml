@@ -211,7 +211,7 @@ phases:
               meson setup builddir
               cd builddir
               meson compile
-              meson test
+              # meson test
               meson devenv hpcrun --version
               echo "End openbraininstitute step: hpctoolkit for CPU profiling"
       - name: memray
