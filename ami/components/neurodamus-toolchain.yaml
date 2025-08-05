@@ -197,7 +197,14 @@ phases:
               source neurodamus_venv/bin/activate
               set -euo pipefail
               git clone https://gitlab.com/hpctoolkit/hpctoolkit.git --recursive --depth 1
-              dnf -y install ccache boost-devel
+              # v4.11.3 was the latest at the time of writing, no other reason
+              git clone https://github.com/ccache/ccache -b v4.11.3 --recursive --depth 1
+              mkdir ccache/build
+              cd ccache/build
+              cmake -D CMAKE_BUILD_TYPE=Release ..
+              make
+              make install
+              dnf -y install boost-devel
               pip install meson
               cd hpctoolkit
               meson setup builddir
