@@ -200,10 +200,11 @@ phases:
               # v4.11.3 was the latest at the time of writing, no other reason
               git clone https://github.com/ccache/ccache -b v4.11.3 --recursive --depth 1
               mkdir ccache/build
-              cd ccache/build
+              pushd ccache/build
               cmake -D CMAKE_BUILD_TYPE=Release ..
               make
               make install
+              popd
               dnf -y install boost-devel
               pip install meson
               cd hpctoolkit
