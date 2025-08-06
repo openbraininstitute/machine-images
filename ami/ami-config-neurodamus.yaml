@@ -11,7 +11,7 @@ Build:
       # Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/packages/1.0.1/1
       Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/packages/1.0.9/1
     - Type: arn
-      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/neurodamus-toolchain/0.0.2/1
+      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/neurodamus-toolchain/0.0.3/1
     # - Type: arn  # See 'AdditionalIamPolicies' policy below
     #   Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/singularity-ce/4.2.1/1
     - Type: arn
