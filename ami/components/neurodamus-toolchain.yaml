@@ -2,6 +2,27 @@
 name: neurodamus-toolchain
 description: Install toolchain for neurodamus
 schemaVersion: 1.0
+parameters:
+  - NeurodamusVersion:
+      type: string
+      default: "3.9.0"
+      description: Version of Neurodamus to install
+  - LibsonataReportVersion:
+      type: string
+      default: "1.2.5"
+      description: Version of Libsonatareport to install
+  - NeuronCommitID:
+      type: string
+      default: "c48d7d5"
+      description: Commit ID of Neuron to install
+  - LibsonataVersion:
+      type: string
+      default: "v0.1.30"
+      description: Version of Libsonatareport to install
+  - NeurodamusModelsVersion:
+      type: string
+      default: "2.4.2"
+      description: Version of Neurodamus-models to install
 phases:
   - name: build
     steps:
@@ -90,13 +111,32 @@ phases:
               export CC=$(which mpicc)
               export CXX=$(which mpic++)
               set -euo pipefail
-              pip install git+https://github.com/openbraininstitute/libsonata@master
-              git clone https://github.com/openbraininstitute/libsonatareport.git --recursive --depth 1 -b master
+              pip install git+https://github.com/openbraininstitute/libsonata@{{ LibsonataVersion }}
+              echo "End openbraininstitute step: libSONATA"
+      - name: libsonata-report
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: libSONATA"
+              export HOME=/root
+              cd /opt/circuit_simulation
+              source neurodamus_venv/bin/activate
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              export LD_LIBRARY_PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/lib:$LD_LIBRARY_PATH
+              export CC=$(which mpicc)
+              export CXX=$(which mpic++)
+              set -euo pipefail
+              git clone https://github.com/openbraininstitute/libsonatareport.git --recursive --depth 1 -b {{ LibsonataReportVersion }}
               cmake -B libsonatareport/rep_build -S libsonatareport -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=ON
               cmake --build libsonatareport/rep_build --parallel
               cmake --install libsonatareport/rep_build
               rm -rf libsonatareport
-              echo "End openbraininstitute step: libSONATA"
+              echo "End openbraininstitute step: libsonata-report"
       - name: neuron
         action: ExecuteBash
         inputs:
@@ -116,7 +156,7 @@ phases:
               set -euo pipefail
               git clone https://github.com/neuronsimulator/nrn.git nrn
               cd nrn
-              git checkout c48d7d5
+              git checkout {{ NeuronCommitID }}
               cd ..
               cmake -B nrn/nrn_build -S nrn --debug-output -G Ninja -DPYTHON_EXECUTABLE=$(which python) -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install \
               -DNRN_ENABLE_MPI=ON -DNRN_ENABLE_INTERVIEWS=OFF -DNRN_ENABLE_RX3D=OFF -DNRN_ENABLE_CORENEURON=ON -DCMAKE_C_COMPILER=gcc \
@@ -161,6 +201,27 @@ phases:
               export HOME=/root
               cd /opt/circuit_simulation
               source neurodamus_venv/bin/activate
+              export PATH=/opt/circuit_simulation/neurodamus_venv/bin:$PATH
+              set -euo pipefail
+              echo "openbraininstitute: current working directory"
+              pwd
+              git clone https://github.com/openbraininstitute/neurodamus.git -b {{ NeurodamusVersion }} --depth 1
+              cd neurodamus
+              pip install .
+              cd -
+              cmake --install neurodamus-models/build
+              echo "End openbraininstitute step: neurodamus"
+      - name: neurodamus-models
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              echo "Start openbraininstitute step: neurodamus-models"
+              export HOME=/root
+              cd /opt/circuit_simulation
+              source neurodamus_venv/bin/activate
               export SONATAREP_INSTALL_DIR=/opt/circuit_simulation/obi_install
               export PATH=/opt/circuit_simulation/hdf5/hdf5-1.14.6/install/bin:$PATH
               export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
@@ -173,17 +234,12 @@ phases:
               export CXX=$(which mpicxx)
               set -euo pipefail
               echo "openbraininstitute: current working directory"
-              pwd
-              git clone https://github.com/openbraininstitute/neurodamus.git
-              cd neurodamus
-              pip install .
-              cd -
-              git clone --branch=main https://github.com/openbraininstitute/neurodamus-models.git
+              git clone --branch={{ NeurodamusModelsVersion }} https://github.com/openbraininstitute/neurodamus-models.git --depth 1
               export DATADIR=$(python -c "import neurodamus; from pathlib import Path; print(Path(neurodamus.__file__).parent / 'data')")
               cmake -B neurodamus-models/build -S neurodamus-models -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${SONATAREP_INSTALL_DIR} -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -DNEURODAMUS_NCX_V5=ON
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
-              echo "End openbraininstitute step: neurodamus"
+              echo "End openbraininstitute step: neurodamus-models"
       - name: hpctoolkit
         action: ExecuteBash
         inputs:
@@ -193,6 +249,8 @@ phases:
               set -x
               echo "Start openbraininstitute step: hpctoolkit for CPU profiling"
               export HOME=/root
+              export MPICC=$(which mpicc)
+              export MPICXX=$(which mpic++)
               cd /opt/circuit_simulation
               source neurodamus_venv/bin/activate
               set -euo pipefail
@@ -208,7 +266,7 @@ phases:
               dnf -y install boost-devel
               pip install meson
               cd hpctoolkit
-              meson setup builddir
+              meson setup builddir -Dhpcprof_mpi=enabled
               cd builddir
               meson compile
               # meson test
