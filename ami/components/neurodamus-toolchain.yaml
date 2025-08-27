@@ -5,7 +5,7 @@ schemaVersion: 1.0
 parameters:
   - NeurodamusVersion:
       type: string
-      default: "3.9.0"
+      default: "3.10.0"
       description: Version of Neurodamus to install
   - LibsonataReportVersion:
       type: string
