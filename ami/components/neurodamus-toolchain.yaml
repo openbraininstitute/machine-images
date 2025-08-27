@@ -211,14 +211,14 @@ phases:
               cd -
               cmake --install neurodamus-models/build
               echo "End openbraininstitute step: neurodamus"
-      - name: neurodamus-models
+      - name: neurodamus-neocortex
         action: ExecuteBash
         inputs:
           commands:
             - |-
               #!/bin/bash
               set -x
-              echo "Start openbraininstitute step: neurodamus-models"
+              echo "Start openbraininstitute step: neurodamus-neocortex"
               export HOME=/root
               cd /opt/circuit_simulation
               source neurodamus_venv/bin/activate
@@ -239,7 +239,7 @@ phases:
               cmake -B neurodamus-models/build -S neurodamus-models -DCMAKE_INSTALL_PREFIX=/opt/circuit_simulation/obi_install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON -DCMAKE_PREFIX_PATH=${SONATAREP_INSTALL_DIR} -DNEURODAMUS_CORE_DIR=${DATADIR} -DNEURODAMUS_MECHANISMS=neocortex -DNEURODAMUS_NCX_V5=ON
               cmake --build neurodamus-models/build
               cmake --install neurodamus-models/build
-              echo "End openbraininstitute step: neurodamus-models"
+              echo "End openbraininstitute step: neurodamus-neocortex"
       - name: hpctoolkit
         action: ExecuteBash
         inputs:
@@ -304,4 +304,10 @@ phases:
               set -euo pipefail
               cd /opt/circuit_simulation
               source neurodamus_venv/bin/activate
-              special -python -c "from neuron import h; from neurodamus import Neurodamus; h.quit()"
+              export NEURODAMUS_NEOCORTEX_ROOT=/opt/circuit_simulation/obi_install
+              export NEURODAMUS_PYTHON=$(python -c "import neurodamus; from pathlib import Path; print(Path(neurodamus.__file__).parent / 'data')")
+              export HOC_LIBRARY_PATH=${NEURODAMUS_NEOCORTEX_ROOT}/share/neurodamus_neocortex/hoc
+              export CORENEURONLIB=${NEURODAMUS_NEOCORTEX_ROOT}/lib/libcorenrnmech.so
+              export NRNMECH_LIB_PATH=${NEURODAMUS_NEOCORTEX_ROOT}/lib/libnrnmech.so
+              cd /opt/circuit_simulation/neurodamus/tests/simulations/usecase3/
+              special -python $NEURODAMUS_PYTHON/init.py --configFile=simulation_sonata_coreneuron.json
