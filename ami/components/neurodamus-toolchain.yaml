@@ -286,6 +286,33 @@ phases:
               set -euo pipefail
               pip install memray
               echo "End openbraininstitute step: memray for memray profiling"
+      - name: darshan
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              #!/bin/bash
+              set -x
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
+              export LD_LIBRARY_PATH=/opt/amazon/openmpi5/lib64:${LD_LIBRARY_PATH}
+              cd /opt/circuit_simulation
+              echo "Start openbraininstitute step: darshan-runtime for parallel I/O profiling"
+              curl -O https://web.cels.anl.gov/projects/darshan/releases/darshan-3.4.7.tar.gz
+              tar xf darshan-3.4.7.tar.gz
+              cd darshan-3.4.7
+              ./prepare.sh
+              pushd darshan-runtime
+              ./configure --with-log-path=/opt/circuit_simulation/darshan/darshan-logs --prefix=/opt/circuit_simulation/darshan/darshan-runtime --with-jobid-env=SLURM_JOBID CC=mpicc --enable-hdf5-mod
+              popd
+              echo "Start openbraininstitute step: darshan-utils for parallel I/O profiling"
+              dnf -y install perl-Pod-Parser gnuplot
+              pushd darshan-util
+              ./configure --prefix=/opt/circuit_simulation/darshan/darshan-util
+              make
+              make install
+              popd
+              rm /opt/circuit_simulation/darshan-3.4.7.tar.gz
+              echo "End openbraininstitute step: darshan for parallel I/O profiling"
   - name: Test
     steps:
       - name: TestNeurodamus
