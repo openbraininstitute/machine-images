@@ -209,7 +209,6 @@ phases:
               cd neurodamus
               pip install .
               cd -
-              cmake --install neurodamus-models/build
               echo "End openbraininstitute step: neurodamus"
       - name: neurodamus-neocortex
         action: ExecuteBash
