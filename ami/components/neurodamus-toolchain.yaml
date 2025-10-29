@@ -9,7 +9,7 @@ parameters:
       description: Version of Neurodamus to install
   - LibsonataReportVersion:
       type: string
-      default: "1.2.5"
+      default: "1.2.7"
       description: Version of Libsonatareport to install
   - NeuronCommitID:
       type: string
