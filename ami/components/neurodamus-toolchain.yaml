@@ -263,7 +263,7 @@ phases:
               make
               make install
               popd
-              dnf -y install boost-devel bzip2-devel tbb-devel elfutils-devel xerces-c-devel binutils-devel yaml-cpp-devel libpfm-devel libunwind-devel xxhash-devel zlib-devel
+              dnf -y install boost-devel binutils-devel
               pip install meson
               cd hpctoolkit
               meson setup builddir -Dhpcprof_mpi=enabled
