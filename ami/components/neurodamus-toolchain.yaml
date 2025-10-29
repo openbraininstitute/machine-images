@@ -248,6 +248,7 @@ phases:
               set -x
               echo "Start openbraininstitute step: hpctoolkit for CPU profiling"
               export HOME=/root
+              export PATH=/opt/amazon/openmpi5/bin:${PATH}
               export MPICC=$(which mpicc)
               export MPICXX=$(which mpic++)
               cd /opt/circuit_simulation
