@@ -3,7 +3,6 @@
     "components": {
         "configure-ami": "1.0.1",
         "neurodamus-toolchain": "0.0.6",
-        "packages": "1.0.9",
-        "singularity-ce": "4.2.2"
+        "packages": "1.0.9"
     }
 }

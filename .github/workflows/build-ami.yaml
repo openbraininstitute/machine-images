@@ -24,51 +24,52 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_AMI_DEPLOYMENT_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - name: Fill in variables in ami definition
-        run: |-
-          sed -i "s/AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/" ami/ami-config-neurodamus.yaml
-          sed -i "s/AWS_SUBNET_ID/${{ secrets.AWS_SUBNET_ID }}/" ami/ami-config-neurodamus.yaml
-          sed -i "s/AWS_SG_ID/${{ secrets.AWS_SG_ID }}/" ami/ami-config-neurodamus.yaml
-          cat ami/ami-config-neurodamus.yaml
-      - name: Upload component definitions
-        run: |-
-          aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
       - name: Install jq
         run: |-
           sudo apt-get update
           sudo apt-get install -q -y jq
-      - name: Read names and versions
-        id: versions
+      - name: Fill in variables in ami definition
         run: |-
-          echo "AMI=$(jq -r '.ami' versions.json)" >> $GITHUB_OUTPUT
-          echo "CONFIGURE_AMI=$(jq -r '.components."configure-ami"' versions.json)" >> $GITHUB_OUTPUT
-          echo "NEURODAMUS_TOOLCHAIN=$(jq -r '.components."neurodamus-toolchain"' versions.json)" >> $GITHUB_OUTPUT
-          echo "PACKAGES=$(jq -r '.components.packages' versions.json)" >> $GITHUB_OUTPUT
-          echo "SINGULARITY_CE=$(jq -r '.components."singularity-ce"' versions.json)" >> $GITHUB_OUTPUT
-      - name: test
+          IMAGE_CONFIG_FILE="ami/ami-config-neurodamus.yaml"
+          VERSIONS_FILE="versions.json"
+
+          sed -i "s/AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/" ${IMAGE_CONFIG_FILE}
+          sed -i "s/AWS_SUBNET_ID/${{ secrets.AWS_SUBNET_ID }}/" ${IMAGE_CONFIG_FILE}
+          sed -i "s/AWS_SG_ID/${{ secrets.AWS_SG_ID }}/" ${IMAGE_CONFIG_FILE}
+
+          for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
+          do
+            echo "Found component ${component}"
+            COMPONENT_VAR=$(echo ${component/-/_} | tr '[:lower:]' '[:upper:]')
+            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            echo "Substituting ${COMPONENT_VAR} in ${IMAGE_CONFIG_FILE} with ${COMPONENT_VERSION}"
+            sed -i "s/${COMPONENT_VAR}/${COMPONENT_VERSION}/" ${IMAGE_CONFIG_FILE}
+          done
+
+          echo "Updated image config file ${IMAGE_CONFIG_FILE}:"
+          cat ${IMAGE_CONFIG_FILE}
+      - name: Upload component definitions
         run: |-
-          echo "Building AMI ${{ steps.versions.outputs.AMI }}"
-          echo "Building component CONFIGURE_AMI ${{ steps.versions.outputs.CONFIGURE_AMI }}"
-          echo "Building component NEURODAMUS_TOOLCHAIN ${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}"
-          echo "Building component PACKAGES ${{ steps.versions.outputs.PACKAGES }}"
-          echo "Building component SINGULARITY_CE ${{ steps.versions.outputs.SINGULARITY_CE }}"
+          aws s3 cp --recursive --exclude '*' --include '*yaml' ami/components/ s3://${{ secrets.BUCKET_NAME }}/components/
       - name: Delete outdated image and component
         run: |-
           pip install aws-parallelcluster
           set -x
-          IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "${{ steps.versions.outputs.AMI }}") | .imageId')
+          VERSIONS_FILE="versions.json"
+          AMI_VERSION=jq -r .ami ${VERSIONS_FILE}
+          IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "'${AMI_VERSION}'") | .imageId')
           if [[ -z ${IMAGE_ARN} ]]
           then
-            IMAGE_ARN=$(pcluster list-images --image-status AVAILABLE | jq -r '.images[] | select( .imageId == "${{ steps.versions.outputs.AMI }}") | .imageId')
+            IMAGE_ARN=$(pcluster list-images --image-status AVAILABLE | jq -r '.images[] | select( .imageId == "'${AMI_VERSION}'") | .imageId')
           fi
           if [[ -n ${IMAGE_ARN} ]]
           then
-            STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "${{ steps.versions.outputs.AMI }}")')
-            pcluster delete-image -i ${{ steps.versions.outputs.AMI }}
+            STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "'${AMI_VERSION}'")')
+            pcluster delete-image -i ${AMI_VERSION}
             while [[ -n "${STACK}" ]]
               do
                 sleep 10
-                STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "${{ steps.versions.outputs.AMI }}")')
+                STACK=$(aws cloudformation list-stacks --no-paginate | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE") | select(.StackName == "'${AMI_VERSION}'")')
                 STACK_STATUS=$(echo $STACK | jq -r .StackStatus)
                 if [[ -n ${STACK_STATUS} && "${STACK_STATUS}" != "DELETE_IN_PROGRESS" ]]
                 then
@@ -77,34 +78,29 @@ jobs:
                 fi
             done
           fi
-          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "configure-ami") | select(.version == "${{ steps.versions.outputs.CONFIGURE_AMI }}" ) | .arn')
-          if [[ -n ${COMPONENT_ARN} ]]
-          then
-            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/configure-ami/${{ steps.versions.outputs.CONFIGURE_AMI }}/1
-          fi
-          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "neurodamus-toolchain") | select(.version == "${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}" ) | .arn')
-          if [[ -n ${COMPONENT_ARN} ]]
-          then
-            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/neurodamus-toolchain/${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}/1
-          fi
-          COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "packages") | select(.version == "${{ steps.versions.outputs.PACKAGES }}" ) | .arn')
-          if [[ -n ${COMPONENT_ARN} ]]
-          then
-            aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/packages/${{ steps.versions.outputs.PACKAGES }}/1
-          fi
-          # COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "singularity-ce") | select(.version == "${{ steps.versions.outputs.SINGULARITY_CE }}" ) | .arn')
-          # if [[ -n ${COMPONENT_ARN} ]]
-          # then
-          #  aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/singularity-ce/${{ steps.versions.outputs.SINGULARITY_CE }}/1
-          # fi
+
+          for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
+          do
+            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            echo "Checking whether we need to delete component ${component} version ${COMPONENT_VERSION}"
+            COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "'${component}'") | select(.version == "'${COMPONENT_VERSION}'" ) | .arn')
+            if [[ -n ${COMPONENT_ARN} ]]
+            then
+              aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/${component}/${COMPONENT_VERSION}/1
+            fi
+          done
+
       - name: Create new component and image
         run: |-
-          echo "Build configure AMI component"
-          aws imagebuilder create-component --name "configure-ami" --semantic-version "${{ steps.versions.outputs.CONFIGURE_AMI }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/configure-ami.yaml"
-          echo "Build neurodamus-toolchain component"
-          aws imagebuilder create-component --name "neurodamus-toolchain" --semantic-version "${{ steps.versions.outputs.NEURODAMUS_TOOLCHAIN }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/neurodamus-toolchain.yaml"
-          echo "Build packages component"
-          aws imagebuilder create-component --name "packages" --semantic-version "${{ steps.versions.outputs.PACKAGES }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/packages.yaml"
-          # aws imagebuilder create-component --name "singularity-ce" --semantic-version "${{ steps.versions.outputs.SINGULARITY_CE }}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/singularity-ce.yaml"
-          echo "Build AMI"
-          pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${{ steps.versions.outputs.AMI }}
+          VERSIONS_FILE="versions.json"
+
+          for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
+          do
+            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            echo "Building component ${component} version ${COMPONENT_VERSION}"
+            aws imagebuilder create-component --name "${component}" --semantic-version "${COMPONENT_VERSION}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/${component}.yaml"
+          done
+
+          AMI_VERSION=jq -r .ami ${VERSIONS_FILE}
+          echo "Build AMI version ${AMI_VERSION}"
+          pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${AMI_VERSION}

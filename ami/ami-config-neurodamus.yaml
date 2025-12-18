@@ -8,14 +8,11 @@ Build:
   # Customize the AMI with different components (e.g., AWS CLI, Singularity CE, ..., etc.)
   Components:
     - Type: arn
-      # Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/packages/1.0.1/1
-      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/packages/1.0.9/1
+      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/packages/PACKAGES_VERSION/1
     - Type: arn
-      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/neurodamus-toolchain/0.0.6/1
-    # - Type: arn  # See 'AdditionalIamPolicies' policy below
-    #   Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/singularity-ce/4.2.1/1
+      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/neurodamus-toolchain/NEURODAMUS_TOOLCHAIN_VERSION/1
     - Type: arn
-      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/configure-ami/1.0.1/1
+      Value: arn:aws:imagebuilder:us-east-1:AWS_ACCOUNT_ID:component/configure-ami/CONFIGURE_AMI_VERSION/1
   Iam:
     # Allow access to the RPMs repository on S3 (e.g., for Singularity CE component)
     AdditionalIamPolicies:
