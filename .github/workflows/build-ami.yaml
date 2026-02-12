@@ -38,7 +38,7 @@ jobs:
           for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
           do
             echo "Found component ${component}"
-            COMPONENT_VAR=$(echo ${component/-/_} | tr '[:lower:]' '[:upper:]')
+            COMPONENT_VAR=$(echo ${component/-/_} | tr '[:lower:]' '[:upper:]')_VERSION
             COMPONENT_VERSION=$(jq -r ".components.\"${component}\"" ${VERSIONS_FILE})
             echo "Substituting ${COMPONENT_VAR} in ${IMAGE_CONFIG_FILE} with ${COMPONENT_VERSION}"
             sed -i "s/${COMPONENT_VAR}/${COMPONENT_VERSION}/" ${IMAGE_CONFIG_FILE}
