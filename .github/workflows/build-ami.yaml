@@ -53,7 +53,7 @@ jobs:
           pip install aws-parallelcluster
           set -x
           VERSIONS_FILE="versions.json"
-          AMI_VERSION=jq -r .ami ${VERSIONS_FILE}
+          AMI_VERSION=$(jq -r .ami ${VERSIONS_FILE})
           IMAGE_ARN=$(pcluster list-images --image-status FAILED | jq -r '.images[] | select( .imageId == "'${AMI_VERSION}'") | .imageId')
           if [[ -z ${IMAGE_ARN} ]]
           then
@@ -94,6 +94,6 @@ jobs:
             echo "Building component ${component} version ${COMPONENT_VERSION}"
             aws imagebuilder create-component --name "${component}" --semantic-version "${COMPONENT_VERSION}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/${component}.yaml"
           done
-          AMI_VERSION=jq -r .ami ${VERSIONS_FILE}
+          AMI_VERSION=$(jq -r .ami ${VERSIONS_FILE})
           echo "Build AMI version ${AMI_VERSION}"
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${AMI_VERSION}
