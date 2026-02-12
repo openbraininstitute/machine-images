@@ -96,4 +96,5 @@ jobs:
           done
           AMI_VERSION=$(jq -r .ami ${VERSIONS_FILE})
           echo "Build AMI version ${AMI_VERSION}"
+          cat ami/ami-config-neurodamus.yaml
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${AMI_VERSION}
