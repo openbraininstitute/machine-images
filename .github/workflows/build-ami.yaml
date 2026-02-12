@@ -32,20 +32,17 @@ jobs:
         run: |-
           IMAGE_CONFIG_FILE="ami/ami-config-neurodamus.yaml"
           VERSIONS_FILE="versions.json"
-
           sed -i "s/AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/" ${IMAGE_CONFIG_FILE}
           sed -i "s/AWS_SUBNET_ID/${{ secrets.AWS_SUBNET_ID }}/" ${IMAGE_CONFIG_FILE}
           sed -i "s/AWS_SG_ID/${{ secrets.AWS_SG_ID }}/" ${IMAGE_CONFIG_FILE}
-
           for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
           do
             echo "Found component ${component}"
             COMPONENT_VAR=$(echo ${component/-/_} | tr '[:lower:]' '[:upper:]')
-            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            COMPONENT_VERSION=$(jq -r ".components.\"${component}\"" ${VERSIONS_FILE})
             echo "Substituting ${COMPONENT_VAR} in ${IMAGE_CONFIG_FILE} with ${COMPONENT_VERSION}"
             sed -i "s/${COMPONENT_VAR}/${COMPONENT_VERSION}/" ${IMAGE_CONFIG_FILE}
           done
-
           echo "Updated image config file ${IMAGE_CONFIG_FILE}:"
           cat ${IMAGE_CONFIG_FILE}
       - name: Upload component definitions
@@ -78,10 +75,9 @@ jobs:
                 fi
             done
           fi
-
           for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
           do
-            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            COMPONENT_VERSION=$(jq -r ".components.\"${component}\"" ${VERSIONS_FILE})
             echo "Checking whether we need to delete component ${component} version ${COMPONENT_VERSION}"
             COMPONENT_ARN=$(aws imagebuilder list-components --no-paginate | jq -r '.componentVersionList[] | select(.name == "'${component}'") | select(.version == "'${COMPONENT_VERSION}'" ) | .arn')
             if [[ -n ${COMPONENT_ARN} ]]
@@ -89,18 +85,15 @@ jobs:
               aws imagebuilder delete-component --component-build-version-arn=arn:aws:imagebuilder:${{ vars.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:component/${component}/${COMPONENT_VERSION}/1
             fi
           done
-
       - name: Create new component and image
         run: |-
           VERSIONS_FILE="versions.json"
-
           for component in $(jq -r '.components | keys | .[]' ${VERSIONS_FILE})
           do
-            COMPONENT_VERSION=$(jq -r ".components.${component}" ${VERSIONS_FILE})
+            COMPONENT_VERSION=$(jq -r ".components.\"${component}\"" ${VERSIONS_FILE})
             echo "Building component ${component} version ${COMPONENT_VERSION}"
             aws imagebuilder create-component --name "${component}" --semantic-version "${COMPONENT_VERSION}" --platform "Linux" --tags "SBO_Billing=hpc:parallelcluster" --uri "s3://${{ secrets.BUCKET_NAME }}/components/${component}.yaml"
           done
-
           AMI_VERSION=jq -r .ami ${VERSIONS_FILE}
           echo "Build AMI version ${AMI_VERSION}"
           pcluster build-image --image-configuration ami/ami-config-neurodamus.yaml --image-id ${AMI_VERSION}
