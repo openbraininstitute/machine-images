@@ -5,23 +5,23 @@ schemaVersion: 1.0
 parameters:
   - NeurodamusVersion:
       type: string
-      default: "3.11.0"
+      default: "4.1.0"
       description: Version of Neurodamus to install
   - LibsonataReportVersion:
       type: string
-      default: "1.2.7"
+      default: "2.0.0"
       description: Version of Libsonatareport to install
   - NeuronCommitID:
       type: string
-      default: "9.0.0"
+      default: "9.0.1"
       description: Commit ID or version of Neuron to install
   - LibsonataVersion:
       type: string
-      default: "v0.1.31"
+      default: "v0.1.33"
       description: Version of Libsonatareport to install
   - NeurodamusModelsVersion:
       type: string
-      default: "2.4.2"
+      default: "2.4.3"
       description: Version of Neurodamus-models to install
 phases:
   - name: build
