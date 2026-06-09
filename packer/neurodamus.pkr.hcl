@@ -76,23 +76,43 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "UV_VERSION=${var.uv_version}",
-      "UV_LINK_MODE=copy",
-      "UV_COMPILE_BYTECODE=1",
-      "UV_PYTHON_CACHE_DIR=/cache/uv",
-    ]
-    execute_command  = "sudo {{ .Vars }}/usr/bin/env bash {{ .Path }}"
+    execute_command  = "sudo /usr/bin/env bash {{ .Path }}"
     inline = [
-      "curl -fsSL https://astral.sh/uv/${var.uv_version}/install.sh | sh",
-      "export PATH=\"$HOME/.local/bin:$PATH\"",
-      "uv python install ${var.python_version}",
+      <<-EOF
+      cat <<'SCRIPT' | tee /etc/profile.d/uv-env-vars.sh
+      export UV_PYTHON=python${var.python_version}
+      export UV_LINK_MODE=copy
+      export UV_PYTHON_CACHE_DIR=/cache/uv
+      export UV_PYTHON_INSTALL_DIR=/uv/python
+      export UV_CACHE_DIR=/cache/uv
+      export UV_COMPILE_BYTECODE=1
+      export UV_INSTALL_DIR=/uv
+      export PATH=/uv/:$PATH
+      SCRIPT
+      source /etc/profile
+      curl -fsSL https://astral.sh/uv/${var.uv_version}/install.sh | sh
+      uv python install ${var.python_version}
+      EOF
+    ]
+  }
+
+  provisioner "shell-local" {
+    inline = [
+      "[ -e neurodamus ] || git clone --no-checkout --filter=blob:none https://github.com/openbraininstitute/neurodamus/ neurodamus",
+      "cd neurodamus && git sparse-checkout set --no-cone 'ci/scripts/*' && git checkout ${var.neurodamus_script_commit}",
     ]
   }
 
   provisioner "file" {
-    source      = "scripts"
+    source      = "neurodamus/ci/scripts"
     destination = "/tmp/"
+    generated   = true
+  }
+
+  provisioner "file" {
+    source      = "install-aws-deps.sh"
+    destination = "/tmp/scripts/"
+    generated   = true
   }
 
   provisioner "shell" {
@@ -103,34 +123,33 @@ build {
       "CMAKE_BUILD_TYPE=RelWithDebugInfo",
       "BUILD_TARGET=${source.type}",
 
-      "UV_PYTHON=python${var.python_version}",
       "SCCACHE_DIR=/cache/sccache",
-      "UV_LINK_MODE=copy",
-      "UV_PYTHON_CACHE_DIR=/cache/uv",
-      "UV_CACHE_DIR=/cache/uv",
-      "UV_COMPILE_BYTECODE=1",
-      "UV_PYTHON_DOWNLOADS=never",
     ]
     inline = [
+      "set -euo pipefail",
       "is-amazon() { [[ $BUILD_TARGET = 'amazon-ebs' ]] }",
       "is-azure()  { [[ $BUILD_TARGET = 'azure-arm' ]] }",
       "is-docker() { [[ $BUILD_TARGET = 'docker' ]] }",
+      "unchecked-source() { set +u; source \"$1\"; set -u; }",
 
       "export PATH=$HOME/.local/bin:$PATH",
+      "export SUDO=''",
 
       "is-docker && export DNF_OPTIONS='-v --setopt=keepcache=1'",
 
       "(is-docker || is-amazon ) && source /tmp/scripts/install-dnf-dependencies.sh && install-dnf-dependencies",
       "is-azure && source /tmp/scripts/install-apt-dependencies.sh && install-apt-dependencies",
-      "is-azure && source /usr/share/modules/init/bash && module load openmpi",
+      "is-azure && source /usr/share/modules/init/bash && module load mpi/openmpi",
 
-      "is-docker && dnf install -y $DNF_OPTIONS openmpi-devel && source /etc/profile && module load mpi/openmpi-x86_64",
-      "is-amazon && source /tmp/scripts/install-aws-deps.sh && install-aws-deps && source /etc/profile && module load openmpi5 libfabric-aws",
+      "is-docker && dnf install -y $DNF_OPTIONS openmpi-devel && unchecked-source /etc/profile && module load mpi/openmpi-x86_64",
+      "is-amazon && source /tmp/scripts/install-aws-deps.sh && install-aws-deps && unchecked-source /etc/profile && module load openmpi5 libfabric-aws",
 
       "module list",
 
       "uv venv $INSTALL_DIR/venv",
-      "source $INSTALL_DIR/venv/bin/activate",
+      "unchecked-source $INSTALL_DIR/venv/bin/activate",
+
+      "echo $-",
 
       "source /tmp/scripts/install-python-dependencies.sh && PIP='uv pip' install-python-dependencies",
 
@@ -148,9 +167,11 @@ build {
 
       "source /tmp/scripts/build-neurodamus.sh && PIP='uv pip' build-neurodamus ${var.neurodamus_commit}",
 
-      "source /tmp/scripts/build-neurodamus-models.sh && build-neocortex-models ${var.neurodamus_models_commit}",
+      "source /tmp/scripts/build-neocortex-models.sh && build-neocortex-models ${var.neurodamus_models_commit}",
 
       "source /tmp/scripts/make-env.sh && make-env",
+
+      "source /tmp/scripts/make-build-neurodamus-models.sh && make-build-neurodamus-models",
 
       "is-amazon && dnf clean all",
 

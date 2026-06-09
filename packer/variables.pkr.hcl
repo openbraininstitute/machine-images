@@ -1,3 +1,8 @@
+variable "neurodamus_script_commit" {
+  type        = string
+  description = "commit of neuordamus repository where ci/scripts is pulled from"
+  default     = "4.2.3"
+}
 
 variable "libsonatareport_commit" {
   type        = string
