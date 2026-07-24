@@ -40,20 +40,16 @@ variable "aws_region" {
 
 variable "aws_instance_type" {
   type    = string
-  default = "c5.xlarge"
 }
 
 variable "az_region" {
   type    = string
-  default = "East US" # XXX better default
 }
 
 variable "az_instance_type" {
   type    = string
-  default = "Standard_E4s_v3" # XXX better default
 }
 
 variable "az_resource_group" {
   type    = string
-  default = "obimgeastus" # XXX better default
 }

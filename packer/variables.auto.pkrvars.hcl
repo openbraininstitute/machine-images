@@ -8,3 +8,7 @@ neurodamus_script_commit = "77f9250f8db7f307e518ee7d3da66083c2a6ca71"
 
 # the AMI build has to happen on a machine that supports EFA
 aws_instance_type = "c5n.9xlarge"
+
+az_region = "South Central US"
+az_instance_type = "Standard_E4s_v3"
+az_resource_group = "obi-batch-rg"
