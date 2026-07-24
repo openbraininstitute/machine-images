@@ -15,6 +15,8 @@ PCS_AGENT_VERSION=v1.3.2-1
 REGION=us-east-1
 
 install-aws-deps () {
+   yum install -y python3.11
+
    echo "========== Install aws-efa =========="
    cd /tmp
    curl -o efa-installer.tar.tz https://efa-installer.amazonaws.com/aws-efa-installer-$EFA_VERSION.tar.gz

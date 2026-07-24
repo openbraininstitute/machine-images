@@ -99,7 +99,7 @@ build {
   provisioner "shell-local" {
     inline = [
       "[ -e neurodamus ] || git clone --no-checkout --filter=blob:none https://github.com/openbraininstitute/neurodamus/ neurodamus",
-      "cd neurodamus && git sparse-checkout set --no-cone 'ci/scripts/*' && git checkout ${var.neurodamus_script_commit}",
+      "cd neurodamus && git fetch --tags && git sparse-checkout set --no-cone 'ci/scripts/*' && git checkout ${var.neurodamus_script_commit}",
     ]
   }
 
@@ -110,13 +110,13 @@ build {
   }
 
   provisioner "file" {
+    only        = ["docker.neurodamus", "amazon-ebs.neurodamus"]
     source      = "install-aws-deps.sh"
     destination = "/tmp/scripts/"
-    generated   = true
   }
 
   provisioner "shell" {
-    execute_command  = "sudo {{ .Vars }}/usr/bin/env bash {{ .Path }}"
+    execute_command  = "sudo {{ .Vars }}/usr/bin/env bash -l {{ .Path }}"
     environment_vars = [
       "INSTALL_DIR=/opt/obi",
       "BUILD_DIR=/cache/build",
@@ -134,6 +134,7 @@ build {
 
       "export PATH=$HOME/.local/bin:$PATH",
       "export SUDO=''",
+      "export DNF_OPTIONS=''",
 
       "is-docker && export DNF_OPTIONS='-v --setopt=keepcache=1'",
 
@@ -167,13 +168,13 @@ build {
 
       "source /tmp/scripts/build-neurodamus.sh && PIP='uv pip' build-neurodamus ${var.neurodamus_commit}",
 
-      "source /tmp/scripts/build-neocortex-models.sh && build-neocortex-models ${var.neurodamus_models_commit}",
+      "source /tmp/scripts/make-neurodamus-nrnivmodl.sh && make-neurodamus-nrnivmodl",
 
-      "source /tmp/scripts/make-env.sh && make-env",
-
-      "source /tmp/scripts/make-build-neurodamus-models.sh && make-build-neurodamus-models",
+      "export PATH=/opt/obi:$PATH && source /tmp/scripts/make-neocortex-env.sh && BASE_DIR=$BUILD_DIR/neurodamus make-neocortex-env",
 
       "is-amazon && dnf clean all",
+
+      "uv -vv cache prune --ci",
 
       "true",
     ]

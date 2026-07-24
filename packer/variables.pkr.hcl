@@ -1,7 +1,6 @@
 variable "neurodamus_script_commit" {
   type        = string
   description = "commit of neuordamus repository where ci/scripts is pulled from"
-  default     = "4.2.3"
 }
 
 variable "libsonatareport_commit" {
@@ -12,11 +11,6 @@ variable "libsonatareport_commit" {
 variable "libsonata_commit" {
   type        = string
   description = "libsonata commit"
-}
-
-variable "neurodamus_models_commit" {
-  type        = string
-  description = "neurodamus models commit"
 }
 
 variable "python_version" {
