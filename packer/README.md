@@ -21,4 +21,9 @@ packer build -only='azure-arm.neurodamus' .    # Azure image
 
 ## Configuration
 
-Pinned versions are in `variables.auto.pkrvars.hcl`. Variable definitions are in `variables.pkr.hcl`.
+Pinned versions are in `variables.auto.pkrvars.hcl`.
+Variable definitions are in `variables.pkr.hcl`.
+AWS related versions (PCS, Slurm, etc) are in `install-aws-deps.sh`.
+
+## Testing
+Building locally with the `docker` target should allow for testing the image, once produced.
