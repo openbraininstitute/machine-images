@@ -38,7 +38,7 @@ jobs:
         working-directory: packer
 
       - name: Packer Validate
-        run: packer validate .
+        run: packer validate -only='amazon-ebs.neurodamus' .
         working-directory: packer
 
       - name: Packer Build
