@@ -19,8 +19,8 @@ install-aws-deps () {
 
    echo "========== Install aws-efa =========="
    cd /tmp
-   curl -o efa-installer.tar.tz https://efa-installer.amazonaws.com/aws-efa-installer-$EFA_VERSION.tar.gz
-   tar xf efa-installer.tar.tz && cd aws-efa-installer
+   curl -o efa-installer.tar.gz https://efa-installer.amazonaws.com/aws-efa-installer-$EFA_VERSION.tar.gz
+   tar xf efa-installer.tar.gz && cd aws-efa-installer
    ./efa_installer.sh -y --mpi=openmpi5
 
    echo "========== Install aws-pcs-slurm =========="

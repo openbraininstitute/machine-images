@@ -1,6 +1,6 @@
 variable "neurodamus_script_commit" {
   type        = string
-  description = "commit of neuordamus repository where ci/scripts is pulled from"
+  description = "commit of neurodamus repository where ci/scripts is pulled from"
 }
 
 variable "libsonatareport_commit" {

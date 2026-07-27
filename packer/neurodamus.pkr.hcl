@@ -6,7 +6,6 @@ source "docker" "neurodamus" {
   ]
   volumes = {
     "./cache" = "/cache",
-    "./cache/yum" = "/var/cache/yum/",
     "./cache/yum" = "/var/cache/dnf/",
   }
 }
@@ -116,7 +115,7 @@ build {
   }
 
   provisioner "shell" {
-    execute_command  = "sudo {{ .Vars }}/usr/bin/env bash -l {{ .Path }}"
+    execute_command  = "sudo {{ .Vars }} /usr/bin/env bash -l {{ .Path }}"
     environment_vars = [
       "INSTALL_DIR=/opt/obi",
       "BUILD_DIR=/cache/build",
