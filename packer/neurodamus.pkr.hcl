@@ -17,6 +17,8 @@ source "amazon-ebs" "neurodamus" {
   vpc_id        = var.aws_vpc_id
   subnet_id     = var.aws_subnet_id
 
+  ami_users = var.ami_share_accounts
+
   associate_public_ip_address = true
   temporary_security_group_source_cidrs = ["0.0.0.0/0"]
 

@@ -6,6 +6,8 @@ python_version           = "3.12"
 uv_version               = "0.11.15"
 neurodamus_script_commit = "77f9250f8db7f307e518ee7d3da66083c2a6ca71"
 
+ami_share_accounts = ["671250183987"] # production
+
 # the AMI build has to happen on a machine that supports EFA
 aws_instance_type = "c5n.9xlarge"
 
