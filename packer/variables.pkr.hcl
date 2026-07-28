@@ -33,6 +33,11 @@ variable "neurodamus_commit" {
   description = "Neurodamus git commit or tag to build"
 }
 
+variable "ami_share_accounts" {
+  type        = list(string)
+  description = "list of AWS account IDs to share the resulting AMI with"
+}
+
 variable "aws_region" {
   type    = string
   default = "us-east-1"
