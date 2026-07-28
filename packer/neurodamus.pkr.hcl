@@ -14,6 +14,9 @@ source "amazon-ebs" "neurodamus" {
   ami_name      = "neurodamus-${var.neurodamus_commit}-{{timestamp}}"
   instance_type = var.aws_instance_type
   region        = var.aws_region
+  vpc_id        = var.aws_vpc_id
+  subnet_id     = var.aws_subnet_id
+
   source_ami_filter {
     filters = {
       name                = "al2023-ami-2023.*-x86_64"

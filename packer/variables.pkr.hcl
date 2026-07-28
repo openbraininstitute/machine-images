@@ -38,6 +38,15 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "aws_vpc_id" {
+  type    = string
+  default = "vpc-0f0a57d191d06588b" # SBO_poc
+}
+variable "aws_subnet_id" {
+  type    = string
+  default = "subnet-083c5be919895669c" # Bastion host subnet
+}
+
 variable "aws_instance_type" {
   type    = string
 }
