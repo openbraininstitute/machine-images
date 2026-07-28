@@ -44,7 +44,7 @@ variable "aws_vpc_id" {
 }
 variable "aws_subnet_id" {
   type    = string
-  default = "subnet-083c5be919895669c" # Bastion host subnet
+  default = "subnet-064de2163c1b2ae2d" # public_a
 }
 
 variable "aws_instance_type" {
