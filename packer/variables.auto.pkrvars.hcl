@@ -11,6 +11,9 @@ ami_share_accounts = ["671250183987"] # production
 # the AMI build has to happen on a machine that supports EFA
 aws_instance_type = "c5n.9xlarge"
 
-az_region = "South Central US"
+#az_region = "South Central US"
 az_instance_type = "Standard_E4s_v3"
-az_resource_group = "obi-batch-rg"
+#az_resource_group = "obi-batch-rg"
+
+az_resource_group = "mgobibatch-rg"
+az_region = "East US"
