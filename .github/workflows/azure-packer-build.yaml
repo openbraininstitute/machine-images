@@ -1,0 +1,47 @@
+name: Build Azure Image with Packer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  PACKER_VERSION: "1.15.3"
+
+permissions:
+  id-token: write   # for OIDC auth to AWS
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: sandbox-hpc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: ${{ env.PACKER_VERSION }}
+
+      - name: Packer Init
+        run: packer init .
+        working-directory: packer
+
+      - name: Packer Validate
+        run: packer validate -only='azure-arm.neurodamus' .
+        working-directory: packer
+
+      - name: Packer Build
+        run: packer build -only='azure-arm.neurodamus' .
+        working-directory: packer
