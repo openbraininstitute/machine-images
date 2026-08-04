@@ -56,14 +56,14 @@ variable "aws_instance_type" {
   type    = string
 }
 
-variable "az_region" {
-  type    = string
-}
-
 variable "az_instance_type" {
   type    = string
 }
 
-variable "az_resource_group" {
+variable "az_build_resource_group_name" {
+  type    = string
+}
+
+variable "az_gallery_name" {
   type    = string
 }

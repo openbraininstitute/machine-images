@@ -44,20 +44,16 @@ source "azure-arm" "neurodamus" {
     image_offer     = "ubuntu-hpc"
     image_sku       = "2404"
 
-    #location = var.az_region
     vm_size  = var.az_instance_type
 
-    build_resource_group_name = "auto-machine-images-rg"
-
-    #managed_image_name                = "neurodamus-${var.neurodamus_commit}-{{timestamp}}"
-    #managed_image_resource_group_name = var.az_resource_group
+    build_resource_group_name = var.az_build_resource_group_name
 
     shared_image_gallery_destination {
       subscription         = "57e3fa71-b415-41fa-b0b1-f47dca5c0813"
-      resource_group       = "auto-machine-images-rg"
-      gallery_name         = "openbraininstitute_image_gallery"
+      resource_group       = var.az_build_resource_group_name
+      gallery_name         = var.az_gallery_name
       image_name           = "neurodamus"
-      image_version        = "${var.neurodamus_commit}"
+      image_version        = var.neurodamus_commit
       replication_regions  = ["South Central US"]
       storage_account_type = "Standard_LRS"
     }
