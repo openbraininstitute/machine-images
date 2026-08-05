@@ -44,5 +44,5 @@ jobs:
         working-directory: packer
 
       - name: Packer Build
-        run: packer build -only='azure-arm.neurodamus' .
+        run: packer build -force -only='azure-arm.neurodamus' .
         working-directory: packer
