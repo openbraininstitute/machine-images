@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           # secrets managed by openbraininstitute/azure-terraform-management
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
