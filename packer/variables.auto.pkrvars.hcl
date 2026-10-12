@@ -1,10 +1,10 @@
 libsonata_commit         = "v0.2.2"
 libsonatareport_commit   = "2.0.0"
-neurodamus_commit        = "07bee7bbf53b94bcca1ef2ae13accab90e68226d"
+neurodamus_commit        = "4.2.7"
 neuron_commit            = "2ac5cc7191e44805cdf40abf0ad6d3fac1481d49"
 python_version           = "3.12"
 uv_version               = "0.11.15"
-neurodamus_script_commit = "07bee7bbf53b94bcca1ef2ae13accab90e68226d"
+neurodamus_script_commit = "4.2.7"
 
 ami_share_accounts = ["671250183987"] # production
 
