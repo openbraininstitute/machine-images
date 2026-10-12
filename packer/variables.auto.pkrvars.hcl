@@ -5,6 +5,7 @@ neuron_commit            = "2ac5cc7191e44805cdf40abf0ad6d3fac1481d49"
 python_version           = "3.12"
 uv_version               = "0.11.15"
 neurodamus_script_commit = "4.2.7"
+h5py_version             = "3.16.0"
 
 ami_share_accounts = ["671250183987"] # production
 

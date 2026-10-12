@@ -33,6 +33,11 @@ variable "neurodamus_commit" {
   description = "Neurodamus git commit or tag to build"
 }
 
+variable "h5py_version" {
+  type        = string
+  description = "h5py version to build from source with MPI (see neurodamus Dockerfile H5PY_VERSION)"
+}
+
 variable "ami_share_accounts" {
   type        = list(string)
   description = "list of AWS account IDs to share the resulting AMI with"

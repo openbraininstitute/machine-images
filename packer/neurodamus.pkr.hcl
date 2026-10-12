@@ -172,7 +172,7 @@ build {
 
       "source /tmp/scripts/install-hdf5.sh && install-hdf5",
 
-      "source /tmp/scripts/install-h5py.sh && PIP='uv pip' install-h5py",
+      "source /tmp/scripts/install-h5py.sh && PIP='uv pip' install-h5py ${var.h5py_version}",
 
       "source /tmp/scripts/build-libsonatareport.sh && build-libsonatareport ${var.libsonatareport_commit}",
 
