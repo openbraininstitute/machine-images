@@ -138,6 +138,10 @@ build {
       "BUILD_TARGET=${source.type}",
 
       "SCCACHE_DIR=/cache/sccache",
+
+      # NEURON_VERSION is the version the NEURON build is published as.
+      # It must be bumped together with neuron_commit (see neurodamus Dockerfile).
+      "NEURON_VERSION=${var.neuron_version}",
     ]
     inline = [
       "set -euo pipefail",
