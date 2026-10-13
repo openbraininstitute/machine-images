@@ -28,6 +28,11 @@ variable "neuron_commit" {
   description = "NEURON git commit or tag to build"
 }
 
+variable "neuron_version" {
+  type        = string
+  description = "Version the NEURON build is published as; bump together with neuron_commit (see neurodamus Dockerfile NEURON_VERSION)"
+}
+
 variable "neurodamus_commit" {
   type        = string
   description = "Neurodamus git commit or tag to build"
