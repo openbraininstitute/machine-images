@@ -1,11 +1,11 @@
-libsonata_commit         = "v0.2.2"
-libsonatareport_commit   = "2.0.0"
-neurodamus_commit        = "4.2.7"
-neuron_commit            = "2ac5cc7191e44805cdf40abf0ad6d3fac1481d49"
-neuron_version           = "9.0.0"
+libsonata_commit         = "v0.2.4"
+libsonatareport_commit   = "2.1.0"
+neurodamus_commit        = "4.3.0"
+neuron_commit            = "1a6d545679d19d5223e3f0158186f41a315e5f6f"
+neuron_version           = "9.1.0.dev0"
 python_version           = "3.12"
 uv_version               = "0.11.15"
-neurodamus_script_commit = "4.2.7"
+neurodamus_script_commit = "4.3.0"
 h5py_version             = "3.16.0"
 
 ami_share_accounts = ["671250183987"] # production
