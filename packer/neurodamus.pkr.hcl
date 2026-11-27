@@ -24,7 +24,9 @@ source "amazon-ebs" "neurodamus" {
 
   source_ami_filter {
     filters = {
-      name                = "al2023-ami-2023.*-x86_64"
+      # pin the kernel flavour: the kernel-6.1 and kernel-6.18 images of a release
+      # share a creation date, so `most_recent` would pick either one
+      name                = "al2023-ami-2023.*-kernel-6.18-x86_64"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
